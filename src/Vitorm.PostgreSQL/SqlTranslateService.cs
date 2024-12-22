@@ -185,7 +185,7 @@ CREATE TABLE IF NOT exists "User" (
             List<string> sqlFields = new();
 
             // #1 columns
-            entityDescriptor.allColumns?.ForEach(column => sqlFields.Add(GetColumnSql(column)));
+            entityDescriptor.properties?.ForEach(column => sqlFields.Add(GetColumnSql(column)));
 
             return $@"
 CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
 )
 ;";
 
-            string GetColumnSql(IColumnDescriptor column)
+            string GetColumnSql(IPropertyDescriptor column)
             {
                 var columnDbType = column.columnDbType ?? GetColumnDbType(column);
                 var defaultValue = column.isNullable ? "default null" : "";
@@ -236,7 +236,7 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
             //[typeof(Guid)] = "UUID",
         };
 
-        protected override string GetColumnDbType(IColumnDescriptor column)
+        protected override string GetColumnDbType(IPropertyDescriptor column)
         {
             Type type = column.type;
 
