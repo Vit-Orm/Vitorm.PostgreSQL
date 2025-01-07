@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 
+using Vitorm.DataProvider;
+using Vitorm.Sql;
+
 namespace Vitorm.PostgreSQL
 {
     public class DataProvider : SqlDataProvider

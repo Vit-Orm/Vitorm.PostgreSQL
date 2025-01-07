@@ -2,6 +2,10 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Vitorm.Entity;
+using Vitorm.Entity.Loader.DataAnnotations;
+using Vitorm.Entity.PropertyType;
+
 namespace Vitorm.MsTest.CommonTest
 {
     [TestClass]
@@ -151,7 +155,7 @@ namespace Vitorm.MsTest.CommonTest
 
                         return new PropertyDescriptor(
                             propertyInfo, propertyType: new PropertyValueType(propertyInfo.PropertyType),
-                        columnName: columnName,
+                            columnName: columnName,
                             isKey: isKey, isIdentity: isIdentity, isNullable: isNullable,
                             columnDbType: columnDbType,
                             columnOrder: columnOrder

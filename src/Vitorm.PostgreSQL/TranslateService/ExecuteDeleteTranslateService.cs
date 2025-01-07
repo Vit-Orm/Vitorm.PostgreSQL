@@ -1,4 +1,7 @@
-﻿namespace Vitorm.PostgreSQL.TranslateService
+﻿using Vitorm.Sql.SqlTranslate;
+using Vitorm.StreamQuery;
+
+namespace Vitorm.PostgreSQL.TranslateService
 {
     public class ExecuteDeleteTranslateService : BaseQueryTranslateService
     {

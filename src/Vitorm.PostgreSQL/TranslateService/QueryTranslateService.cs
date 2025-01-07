@@ -1,5 +1,8 @@
 ﻿using System.Linq;
 
+using Vitorm.Sql.SqlTranslate;
+using Vitorm.StreamQuery;
+
 namespace Vitorm.PostgreSQL.TranslateService
 {
     public class QueryTranslateService : Vitorm.Sql.SqlTranslate.QueryTranslateService

@@ -1,5 +1,7 @@
 ﻿using Vit.Core.Util.ConfigurationManager;
 
+using Vitorm.Sql;
+
 namespace Vitorm.MsTest
 {
     [System.ComponentModel.DataAnnotations.Schema.Table("User")]

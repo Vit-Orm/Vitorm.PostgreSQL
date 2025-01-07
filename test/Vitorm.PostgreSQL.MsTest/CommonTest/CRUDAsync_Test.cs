@@ -2,6 +2,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Vit.Linq;
+
 namespace Vitorm.MsTest.CommonTest
 {
 

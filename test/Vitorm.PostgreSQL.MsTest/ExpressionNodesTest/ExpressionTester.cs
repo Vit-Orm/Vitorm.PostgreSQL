@@ -3,6 +3,8 @@ using System.Linq.Expressions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Vit.Linq;
+
 namespace Vit.Linq.ExpressionNodes.ExpressionNodesTest
 {
 

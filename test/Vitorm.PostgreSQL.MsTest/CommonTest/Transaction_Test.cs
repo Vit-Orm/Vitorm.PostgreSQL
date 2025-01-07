@@ -48,8 +48,7 @@ namespace Vitorm.MsTest.CommonTest
         }
 
 
-        // can not test for db is not durable
-        //[TestMethod]
+        [TestMethod]
         public void Test_Dispose()
         {
             {
@@ -72,14 +71,16 @@ namespace Vitorm.MsTest.CommonTest
                 }
                 Assert.AreEqual("u4003", userSet.Get(4).name);
             }
+
             {
-                using var dbContext = DataSource.CreateDbContext();
+                using var dbContext = DataSource.CreateDbContext(autoInit: false);
                 var userSet = dbContext.DbSet<User>();
 
-                //Assert.AreEqual("u4002", userSet.Get(4).name);
+                Assert.AreEqual("u4002", userSet.Get(4).name);
             }
 
         }
+
 
 
 

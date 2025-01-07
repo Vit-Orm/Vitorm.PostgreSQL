@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
+
+using Vit.Linq;
+using Vit.Linq.ExpressionNodes.ComponentModel;
+
+using Vitorm.Entity;
+using Vitorm.Sql.SqlTranslate;
 
 namespace Vitorm.PostgreSQL
 {

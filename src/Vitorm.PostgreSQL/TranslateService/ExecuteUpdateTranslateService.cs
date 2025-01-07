@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Vitorm.Sql.SqlTranslate;
+using Vitorm.StreamQuery;
+
 namespace Vitorm.PostgreSQL.TranslateService
 {
     public class ExecuteUpdateTranslateService : BaseQueryTranslateService

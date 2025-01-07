@@ -1,4 +1,5 @@
 ﻿using Vitorm.PostgreSQL;
+using Vitorm.Sql;
 
 namespace Vitorm
 {
@@ -18,8 +19,6 @@ namespace Vitorm
 
             return dbContext;
         }
-
-
 
     }
 }
