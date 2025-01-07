@@ -1,7 +1,5 @@
 ﻿using Vit.Core.Util.ConfigurationManager;
 
-using Vitorm.Sql;
-
 namespace Vitorm.MsTest
 {
     [System.ComponentModel.DataAnnotations.Schema.Table("User")]
@@ -48,31 +46,13 @@ namespace Vitorm.MsTest
         readonly static string connectionString = Appsettings.json.GetStringByPath("Vitorm.PostgreSQL.connectionString");
 
 
-        public static SqlDbContext CreateDbContextForWriting(bool autoInit = true)
+        public static SqlDbContext CreateDbContextForWriting(bool autoInit = true) => CreateDbContext(autoInit);
+
+        public static SqlDbContext CreateDbContext(bool autoInit = true)
         {
             var dbContext = new SqlDbContext();
             dbContext.UsePostgreSQL(connectionString);
-            dbContext.ChangeDatabase(dbContext.databaseName + "2");
             if (autoInit) InitDbContext(dbContext);
-            return dbContext;
-        }
-
-        static bool initedDefaultIndex = false;
-        public static SqlDbContext CreateDbContext()
-        {
-            var dbContext = new SqlDbContext();
-            dbContext.UsePostgreSQL(connectionString);
-
-            lock (typeof(DataSource))
-            {
-                if (!initedDefaultIndex)
-                {
-                    InitDbContext(dbContext);
-
-                    initedDefaultIndex = true;
-                }
-            }
-
             return dbContext;
         }
 

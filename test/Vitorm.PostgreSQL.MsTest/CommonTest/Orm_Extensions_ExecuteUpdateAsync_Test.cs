@@ -68,7 +68,7 @@ namespace Vitorm.MsTest.CommonTest
                 Assert.AreEqual(3, count);
 
 
-                var userList = userQuery.ToList();
+                var userList = userQuery.OrderBy(m => m.id).ToList();
                 Assert.AreEqual("u3_1_4_6", userList[0].name);
                 Assert.AreEqual("u3_3_5_6", userList[2].name);
                 Assert.AreEqual("u2_4__", userList[3].name);

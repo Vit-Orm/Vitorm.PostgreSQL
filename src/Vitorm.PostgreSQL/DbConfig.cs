@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 
-using Vitorm.Sql;
-
 using ConnectionStringBuilder = global::Npgsql.NpgsqlConnectionStringBuilder;
 using DbConnection = global::Npgsql.NpgsqlConnection;
 

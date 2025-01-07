@@ -1,5 +1,4 @@
 ﻿using Vitorm.PostgreSQL;
-using Vitorm.Sql;
 
 namespace Vitorm
 {

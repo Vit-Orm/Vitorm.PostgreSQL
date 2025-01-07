@@ -2,10 +2,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Vitorm.Entity;
-using Vitorm.Entity.Loader.DataAnnotations;
-using Vitorm.Entity.PropertyType;
-
 namespace Vitorm.MsTest.CommonTest
 {
     [TestClass]
