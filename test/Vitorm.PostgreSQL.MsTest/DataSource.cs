@@ -14,9 +14,13 @@ namespace Vitorm.MsTest
         [System.ComponentModel.DataAnnotations.Schema.Column("userName")]
         public string name { get; set; }
 
+        [System.ComponentModel.DataAnnotations.Schema.Column("userBirth")]
         public DateTime? birth { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("userFatherId")]
         public int? fatherId { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("userMotherId")]
         public int? motherId { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.Column("userClassId")]
         public int? classId { get; set; }
 
         public static User NewUser(int id, bool forAdd = false) => new User { id = id, name = "testUser" + id };
