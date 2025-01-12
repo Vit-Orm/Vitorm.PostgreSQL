@@ -20,7 +20,5 @@ namespace Vitorm
             return dbContext;
         }
 
-
-
     }
 }

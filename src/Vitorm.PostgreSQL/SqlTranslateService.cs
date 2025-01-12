@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 using Vit.Linq;
 using Vit.Linq.ExpressionNodes.ComponentModel;
 
 using Vitorm.Entity;
 using Vitorm.Sql.SqlTranslate;
-using Vitorm.StreamQuery;
 
 namespace Vitorm.PostgreSQL
 {
@@ -18,14 +15,16 @@ namespace Vitorm.PostgreSQL
         public static readonly SqlTranslateService Instance = new SqlTranslateService();
 
         protected override BaseQueryTranslateService queryTranslateService { get; }
-        protected override BaseQueryTranslateService executeUpdateTranslateService => throw new NotImplementedException();
         protected override BaseQueryTranslateService executeDeleteTranslateService { get; }
+        protected override BaseQueryTranslateService executeUpdateTranslateService { get; }
 
         public SqlTranslateService()
         {
-            queryTranslateService = new QueryTranslateService(this);
+            queryTranslateService = new Vitorm.PostgreSQL.TranslateService.QueryTranslateService(this);
 
             executeDeleteTranslateService = new Vitorm.PostgreSQL.TranslateService.ExecuteDeleteTranslateService(this);
+
+            executeUpdateTranslateService = new Vitorm.PostgreSQL.TranslateService.ExecuteUpdateTranslateService(this);
         }
         /// <summary>
         ///     Generates the delimited SQL representation of an identifier (column name, table name, etc.).
@@ -66,7 +65,7 @@ namespace Vitorm.PostgreSQL
                             // ##1 ToString
                             case nameof(object.ToString):
                                 {
-                                    return $"cast({EvalExpression(arg, methodCall.@object)} as Nullable(String) )";
+                                    return $"cast({EvalExpression(arg, methodCall.@object)} as text )";
                                 }
 
                             #region ##2 String method:  StartsWith EndsWith Contains
@@ -119,7 +118,7 @@ namespace Vitorm.PostgreSQL
 
                         if (targetType == typeof(string))
                         {
-                            return $"cast({EvalExpression(arg, convert.body)} as Nullable(String))";
+                            return $"cast({EvalExpression(arg, convert.body)} as text)";
                         }
 
                         return $"cast({EvalExpression(arg, convert.body)} as {targetDbType})";
@@ -131,21 +130,9 @@ namespace Vitorm.PostgreSQL
                         // ##1 String Add
                         if (node.valueType?.ToType() == typeof(string))
                         {
-                            // select ifNull( cast( (userFatherId) as Nullable(String) ) , '' )  from `User` 
+                            // select CONCAT("fatherId", '' )  from "User"
 
-                            return $"CONCAT( {BuildSqlSentence(binary.left)} , {BuildSqlSentence(binary.right)} )";
-
-                            string BuildSqlSentence(ExpressionNode node)
-                            {
-                                if (node.nodeType == NodeType.Constant)
-                                {
-                                    ExpressionNode_Constant constant = node;
-                                    if (constant.value == null) return "''";
-                                    else return $"cast( ({EvalExpression(arg, node)}) as String )";
-                                }
-                                else
-                                    return $"ifNull( cast( ({EvalExpression(arg, node)}) as Nullable(String) ) , '')";
-                            }
+                            return $"CONCAT( {EvalExpression(arg, binary.left)} , {EvalExpression(arg, binary.right)} )";
                         }
 
                         // ##2 Numeric Add
@@ -158,9 +145,9 @@ namespace Vitorm.PostgreSQL
                     }
                 case nameof(ExpressionType.Conditional):
                     {
-                        // IF(`t0`.`fatherId` is not null,true, false)
+                        // select (case when "fatherId" is not null then true else false end)  from "User"
                         ExpressionNode_Conditional conditional = node;
-                        return $"IF({EvalExpression(arg, conditional.Conditional_GetTest())},{EvalExpression(arg, conditional.Conditional_GetIfTrue())},{EvalExpression(arg, conditional.Conditional_GetIfFalse())})";
+                        return $"(case when {EvalExpression(arg, conditional.Conditional_GetTest())} then {EvalExpression(arg, conditional.Conditional_GetIfTrue())} else {EvalExpression(arg, conditional.Conditional_GetIfFalse())} end)";
                     }
                     #endregion
 
@@ -185,7 +172,7 @@ CREATE TABLE IF NOT exists "User" (
             List<string> sqlFields = new();
 
             // #1 columns
-            entityDescriptor.allColumns?.ForEach(column => sqlFields.Add(GetColumnSql(column)));
+            entityDescriptor.properties?.ForEach(column => sqlFields.Add(GetColumnSql(column)));
 
             return $@"
 CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
@@ -193,7 +180,7 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
 )
 ;";
 
-            string GetColumnSql(IColumnDescriptor column)
+            string GetColumnSql(IPropertyDescriptor column)
             {
                 var columnDbType = column.columnDbType ?? GetColumnDbType(column);
                 var defaultValue = column.isNullable ? "default null" : "";
@@ -216,11 +203,11 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
         protected readonly static Dictionary<Type, string> columnDbTypeMap = new()
         {
             [typeof(DateTime)] = "timestamp",
-            [typeof(string)] = "varchar(1000)",
+            [typeof(string)] = "text",// varchar(1000)
 
-            [typeof(float)] = "real",
-            [typeof(double)] = "double",
-            [typeof(decimal)] = "numeric",
+            [typeof(float)] = "real", // float4
+            [typeof(double)] = "double precision", // float8
+            [typeof(decimal)] = "decimal",
 
             [typeof(Int64)] = "int8",
             [typeof(Int32)] = "int4",
@@ -236,7 +223,7 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
             //[typeof(Guid)] = "UUID",
         };
 
-        protected override string GetColumnDbType(IColumnDescriptor column)
+        protected override string GetColumnDbType(IPropertyDescriptor column)
         {
             Type type = column.type;
 
@@ -266,50 +253,6 @@ CREATE TABLE IF NOT EXISTS {DelimitTableName(entityDescriptor)} (
             // drop table if exists `User`;
             return $@"drop table if exists {DelimitTableName(entityDescriptor)};";
         }
-        public override string PrepareTruncate(IEntityDescriptor entityDescriptor) => throw new NotSupportedException();
-
-        public override string PrepareExecuteUpdate(QueryTranslateArgument arg, CombinedStream combinedStream) => throw new NotImplementedException();
-
-
-        public override string PrepareDelete(SqlTranslateArgument arg)
-        {
-            // ALTER TABLE `User` DELETE WHERE `id`=2;
-            var entityDescriptor = arg.entityDescriptor;
-
-            // #2 build sql
-            string sql = $@"ALTER TABLE {DelimitTableName(entityDescriptor)} DELETE where {DelimitIdentifier(entityDescriptor.keyName)}={GenerateParameterName(entityDescriptor.keyName)} ; ";
-
-            return sql;
-        }
-
-        public override string PrepareDeleteByKeys<Key>(SqlTranslateArgument arg, IEnumerable<Key> keys)
-        {
-            //  ALTER TABLE `User` DELETE WHERE  id in ( 7 ) ;
-
-            var entityDescriptor = arg.entityDescriptor;
-
-            StringBuilder sql = new StringBuilder();
-
-            sql.Append("ALTER TABLE ").Append(DelimitTableName(entityDescriptor)).Append(" DELETE where ").Append(DelimitIdentifier(entityDescriptor.keyName)).Append(" in (");
-
-            if (keys.Any())
-            {
-                foreach (var key in keys)
-                {
-                    sql.Append(GenerateParameterName(arg.AddParamAndGetName(key))).Append(",");
-                }
-                sql.Length--;
-                sql.Append(");");
-            }
-            else
-            {
-                sql.Append("null);");
-            }
-            return sql.ToString();
-        }
-
-
-        public override (string sql, Func<object, Dictionary<string, object>> GetSqlParams) PrepareUpdate(SqlTranslateArgument arg) => throw new NotImplementedException();
 
 
     }

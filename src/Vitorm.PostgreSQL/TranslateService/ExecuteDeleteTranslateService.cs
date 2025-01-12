@@ -6,13 +6,13 @@ namespace Vitorm.PostgreSQL.TranslateService
     public class ExecuteDeleteTranslateService : BaseQueryTranslateService
     {
         /*
-ALTER TABLE `User` DELETE 
-where id in (
-    select u.id 
-    from `User` u
-    left join `User` father on u.fatherId = father.id 
-    where u.id > 10
-);
+WITH tmp AS (
+    select u."userId" 
+    from "User" u
+    left join "User" father on u."fatherId" = father."userId"
+    where u."userId" > 0
+)
+delete from "User" where "userId" in ( SELECT "userId" FROM tmp );
          */
         public override string BuildQuery(QueryTranslateArgument arg, CombinedStream stream)
         {
@@ -20,11 +20,17 @@ where id in (
 
             var sqlInner = base.BuildQuery(arg, stream);
 
+
             var NewLine = "\r\n";
             var keyName = entityDescriptor.keyName;
 
-            var sql = $"ALTER TABLE {sqlTranslator.DelimitTableName(entityDescriptor)} DELETE";
-            sql += $"{NewLine}where {sqlTranslator.DelimitIdentifier(keyName)} in ({sqlInner})";
+            var sql = $"WITH tmp AS ( {NewLine}";
+            sql += sqlInner;
+
+            sql += $"{NewLine}){NewLine}";
+            sql += $"delete from {sqlTranslator.DelimitTableName(entityDescriptor)} ";
+
+            sql += $"{NewLine}where {sqlTranslator.DelimitIdentifier(keyName)} in ( SELECT {sqlTranslator.DelimitIdentifier(keyName)} FROM tmp ); {NewLine}";
 
             return sql;
         }
